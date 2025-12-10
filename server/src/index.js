@@ -14,13 +14,34 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+// Middleware
 app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'http://localhost:5175',
-        'http://localhost:5176',
-        'http://127.0.0.1:5175'
-    ],
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'http://localhost:5175',
+            'http://localhost:5176',
+            'http://127.0.0.1:5175',
+            process.env.FRONTEND_URL // Allow deployed frontend
+        ];
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || !process.env.NODE_ENV) {
+            callback(null, true);
+        } else {
+            // For hackathon safety, if we really need it to work everywhere:
+            // return callback(null, true); 
+            // But let's stick to the env var for correctness first.
+            // Actually, for a quick hackathon fix, let's just allow the env var if it matches, or fail.
+            // A safer, more permissive check for this context:
+            if (allowedOrigins.includes(origin) || origin === process.env.FRONTEND_URL) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        }
+    },
     credentials: true
 }));
 app.use(express.json());

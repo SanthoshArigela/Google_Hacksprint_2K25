@@ -38,8 +38,12 @@ const Login = ({ onLogin, onVerify }) => {
             }
         } catch (err) {
             console.error(err);
-            const resError = err.response?.data;
-            setError(resError?.error || (isSignup ? 'Signup Failed' : 'Invalid credentials'));
+            if (!err.response) {
+                setError('Network Error: Cannot reach server. Check connection.');
+            } else {
+                const resError = err.response?.data;
+                setError(resError?.error || resError?.message || (isSignup ? 'Signup Failed' : 'Invalid credentials'));
+            }
         } finally {
             setLoading(false);
         }
