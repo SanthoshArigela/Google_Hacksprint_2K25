@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// User & Auth
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  phone         String?   @unique
+  age           Int?
+  dob           DateTime?
+  gender        String?   // 'male', 'female', 'other'
+  
+  // OTP Verification
+  otp           String?
+  otpExpires    DateTime?
+  isVerified    Boolean   @default(false)
+
+  profilePictureUrl String?
+  passwordHash  String?
+  role          String    @default("student")
+  createdAt     DateTime  @default(now())
+  
+  refreshTokens RefreshToken[]
+  expenses      Expense[]
+  budgets       Budget[]
+  categories    Category[]
+  alerts        Alert[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// Finance
+model Budget {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  month            String   // YYYY-MM
+  amountTotal      Decimal
+  rolloverFromPrev Decimal  @default(0)
+  currency         String   @default("INR")
+  createdAt        DateTime @default(now())
+
+  @@unique([userId, month])
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  userId    String?  // Nullable for global categories
+  user      User?    @relation(fields: [userId], references: [id])
+  name      String
+  emoji     String?
+  parentId  String?
+  parent    Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryHierarchy")
+  expenses  Expense[]
+}
+
+model Expense {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  amount        Decimal
+  currency      String   @default("INR")
+  txnTime       DateTime
+  merchant      String?
+  note          String?
+  source        String   @default("manual") // manual, sms, webhook
+  attachmentUrl String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId, txnTime(sort: Desc)])
+}
+
+// Intelligence
+model Alert {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // overspend_risk, bill_due
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
