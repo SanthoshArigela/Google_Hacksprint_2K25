@@ -183,7 +183,7 @@ const Home = ({ onAddClick, onLogout }) => {
             <button
                 onClick={onAddClick}
                 style={{
-                    position: 'fixed', bottom: '24px', right: '24px', width: '64px', height: '64px', borderRadius: '50%',
+                    position: 'fixed', bottom: '34px', right: '24px', width: '64px', height: '64px', borderRadius: '50%',
                     background: 'linear-gradient(135deg, var(--primary-color), var(--accent-color))',
                     boxShadow: '0 8px 24px rgba(140, 82, 255, 0.4)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
